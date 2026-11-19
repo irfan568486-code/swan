@@ -3,7 +3,6 @@ import type { Request, Response, NextFunction } from 'express';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import dotenv from 'dotenv';
-import { createServer as createViteServer } from 'vite';
 import {
   activeFlights,
   adminSessions,
@@ -17,6 +16,7 @@ import {
   type ServerUserRecord,
 } from './server/store.ts';
 import { adminAuth } from './server/firebaseAuth.ts';
+import { persistentRequest } from './server/persistent-request.ts';
 import {
   generateAviatorCrashPoint,
   playTeenPattiDeal,
@@ -206,8 +206,14 @@ function buildPlayerBundle(user: ServerUserRecord) {
 async function startServer() {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      return persistentRequest(req, res, next);
+    }
+    next();
+  });
 
-  // Initialize persistent store on boot
+  // Initialize local state before the first request; production state is loaded from Neon per request.
   getStore();
 
   // --- Public Config & Live Lobby Feed ---
@@ -1127,7 +1133,12 @@ async function startServer() {
   });
 
   // --- Vite / Static Frontend Serving ---
+  app.all('/api/*', (_req, res) => {
+    res.status(404).json({ error: 'API endpoint not found.' });
+  });
+
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -1141,12 +1152,20 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`SwarnaPlay server listening on http://0.0.0.0:${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`SwarnaPlay server listening on http://0.0.0.0:${PORT}`);
+    });
+  }
+
+  return app;
 }
 
-startServer().catch((err) => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+export const appPromise = startServer();
+
+if (!process.env.VERCEL) {
+  appPromise.catch((err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
+}
