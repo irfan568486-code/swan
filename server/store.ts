@@ -102,6 +102,13 @@ interface PersistedStore {
   gameConfig: GameConfigRecord;
 }
 
+export interface PersistentStoreSnapshot {
+  store: PersistedStore;
+  userSessions: Array<[string, { uid: string; expiresAt: number }]>;
+  adminSessions: Array<[string, { adminId: string; createdAt: number; lastActivityAt: number }]>;
+  activeFlights: Array<[string, ActiveFlight]>;
+}
+
 const DATA_DIR = path.resolve(process.cwd(), '.data');
 const STORE_PATH = path.join(DATA_DIR, 'swarnaplay-store.json');
 
@@ -176,6 +183,25 @@ export const userSessions = new Map<string, { uid: string; expiresAt: number }>(
 export const adminSessions = new Map<string, { adminId: string; createdAt: number; lastActivityAt: number }>();
 export const activeFlights = new Map<string, ActiveFlight>();
 
+export function serializeStoreSnapshot(): PersistentStoreSnapshot {
+  return {
+    store: getStore(),
+    userSessions: Array.from(userSessions.entries()),
+    adminSessions: Array.from(adminSessions.entries()),
+    activeFlights: Array.from(activeFlights.entries()),
+  };
+}
+
+export function restoreStoreSnapshot(snapshot: PersistentStoreSnapshot): void {
+  storeCache = snapshot.store;
+  userSessions.clear();
+  adminSessions.clear();
+  activeFlights.clear();
+  for (const [token, session] of snapshot.userSessions || []) userSessions.set(token, session);
+  for (const [token, session] of snapshot.adminSessions || []) adminSessions.set(token, session);
+  for (const [flightId, flight] of snapshot.activeFlights || []) activeFlights.set(flightId, flight);
+}
+
 export function getStore(): PersistedStore {
   if (storeCache) {
     return storeCache;
@@ -198,17 +224,7 @@ export function getStore(): PersistedStore {
 }
 
 export function saveStore(): void {
-  if (!storeCache) return;
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    const tmpPath = `${STORE_PATH}.tmp`;
-    fs.writeFileSync(tmpPath, JSON.stringify(storeCache, null, 2), 'utf8');
-    fs.renameSync(tmpPath, STORE_PATH);
-  } catch (err) {
-    console.error('Failed to persist store file:', err);
-  }
+  // The request middleware commits store mutations to Neon after the response is ready.
 }
 
 export function sanitizeUser(user: ServerUserRecord) {
