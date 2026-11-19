@@ -1,0 +1,98 @@
+/**
+ * Security Rules Specification Verification Matrix (Dirty Dozen Payloads)
+ * Intended for documentation and rules emulator verification.
+ */
+export const dirtyDozenSecurityCases = [
+  {
+    name: '1. Privilege escalation on user creation',
+    actor: 'userA',
+    path: '/users/userA',
+    operation: 'create',
+    payload: { uid: 'userA', username: 'attacker', role: 'admin', status: 'active', totalWins: 0, totalLosses: 0, totalWagered: 0 },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '2. Self-unban attempt on suspended account',
+    actor: 'userA',
+    path: '/users/userA',
+    operation: 'update',
+    payload: { status: 'active' },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '3. Cross-user PII snooping',
+    actor: 'userB',
+    path: '/users/userA/private/info',
+    operation: 'get',
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '4. Infinite starting coins on wallet creation',
+    actor: 'userA',
+    path: '/wallets/userA',
+    operation: 'create',
+    payload: { userId: 'userA', coinBalance: 9999999, lastTxId: 'tx1' },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '5. Orphaned balance update without transaction record',
+    actor: 'userA',
+    path: '/wallets/userA',
+    operation: 'update',
+    payload: { coinBalance: 50000, lastTxId: 'non_existent_tx' },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '6. Forged ADMIN_ADJUST transaction by normal player',
+    actor: 'userA',
+    path: '/transactions/tx_forged',
+    operation: 'create',
+    payload: { txId: 'tx_forged', userId: 'userA', type: 'ADMIN_ADJUST', amount: 50000, balanceAfter: 51000, description: 'hack' },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '7. Game history tampering after round creation',
+    actor: 'userA',
+    path: '/gameHistory/round_1',
+    operation: 'update',
+    payload: { netProfit: 99999 },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '8. Transaction deletion attempt',
+    actor: 'userA',
+    path: '/transactions/tx_1',
+    operation: 'delete',
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '9. Unscoped list scraping across all users transactions',
+    actor: 'userA',
+    path: '/transactions',
+    operation: 'list',
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '10. Unauthorized gameConfig modification',
+    actor: 'userA',
+    path: '/gameConfig/default',
+    operation: 'update',
+    payload: { dailyBonusCoins: 100000 },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '11. ID poisoning with invalid characters or excessive length',
+    actor: 'userA',
+    path: '/transactions/' + 'a'.repeat(300),
+    operation: 'create',
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '12. Shadow field injection on user profile',
+    actor: 'userA',
+    path: '/users/userA',
+    operation: 'create',
+    payload: { uid: 'userA', username: 'player', role: 'player', status: 'active', totalWins: 0, totalLosses: 0, totalWagered: 0, isVipBypass: true },
+    expected: 'PERMISSION_DENIED',
+  },
+];

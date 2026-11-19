@@ -1,0 +1,143 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public-safe user profile and gaming statistics without PII.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "username": { "type": "string", "minLength": 2, "maxLength": 40 },
+        "avatarUrl": { "type": "string", "maxLength": 500 },
+        "role": { "type": "string", "enum": ["player", "admin"] },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "totalWins": { "type": "number" },
+        "totalLosses": { "type": "number" },
+        "totalWagered": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "username", "role", "status", "totalWins", "totalLosses", "totalWagered", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII record for a user (email, phone, auth provider).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "maxLength": 160 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "updatedAt"]
+    },
+    "Wallet": {
+      "title": "Wallet",
+      "description": "User virtual coin balance ledger.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "coinBalance": { "type": "number" },
+        "lastDailyBonusAt": { "type": "string", "maxLength": 64 },
+        "lastTxId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "coinBalance", "lastTxId", "updatedAt"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Immutable virtual coin transaction history record.",
+      "type": "object",
+      "properties": {
+        "txId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "type": { "type": "string", "enum": ["WELCOME_BONUS", "DAILY_BONUS", "GAME_BET", "GAME_WIN", "ADMIN_ADJUST"] },
+        "amount": { "type": "number" },
+        "balanceAfter": { "type": "number" },
+        "game": { "type": "string", "maxLength": 40 },
+        "description": { "type": "string", "maxLength": 240 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["txId", "userId", "type", "amount", "balanceAfter", "description", "createdAt"]
+    },
+    "GameHistory": {
+      "title": "GameHistory",
+      "description": "Demo game round outcome and wager history.",
+      "type": "object",
+      "properties": {
+        "roundId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "game": { "type": "string", "enum": ["WINGO_30", "WINGO_60", "AVIATOR", "TEEN_PATTI"] },
+        "betAmount": { "type": "number" },
+        "selection": { "type": "string", "maxLength": 160 },
+        "outcome": { "type": "string", "maxLength": 200 },
+        "multiplier": { "type": "number" },
+        "payout": { "type": "number" },
+        "netProfit": { "type": "number" },
+        "isDemo": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["roundId", "userId", "game", "betAmount", "selection", "outcome", "multiplier", "payout", "netProfit", "isDemo", "createdAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User or global platform notifications.",
+      "type": "object",
+      "properties": {
+        "notifId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "maxLength": 120 },
+        "message": { "type": "string", "maxLength": 400 },
+        "category": { "type": "string", "enum": ["reward", "game", "system"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["notifId", "userId", "title", "message", "category", "read", "createdAt"]
+    },
+    "GameConfig": {
+      "title": "GameConfig",
+      "description": "Platform demo game parameters managed by admins.",
+      "type": "object",
+      "properties": {
+        "configId": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "wingo30Enabled": { "type": "boolean" },
+        "wingo60Enabled": { "type": "boolean" },
+        "aviatorMaxMultiplier": { "type": "number" },
+        "teenPattiAnte": { "type": "number" },
+        "dailyBonusCoins": { "type": "number" },
+        "welcomeBonusCoins": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["configId", "wingo30Enabled", "wingo60Enabled", "aviatorMaxMultiplier", "teenPattiAnte", "dailyBonusCoins", "welcomeBonusCoins", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Public-safe user profile and win/loss counters."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "PII-isolated private user contact details."
+    },
+    "/wallets/{userId}": {
+      "schema": { "$ref": "#/entities/Wallet" },
+      "description": "Virtual coin balance document linked atomically to transactions."
+    },
+    "/transactions/{txId}": {
+      "schema": { "$ref": "#/entities/Transaction" },
+      "description": "Immutable virtual coin transaction audit trail."
+    },
+    "/gameHistory/{roundId}": {
+      "schema": { "$ref": "#/entities/GameHistory" },
+      "description": "Demo game rounds played by users."
+    },
+    "/notifications/{notifId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Notifications targeted at users or ALL."
+    },
+    "/gameConfig/{configId}": {
+      "schema": { "$ref": "#/entities/GameConfig" },
+      "description": "Demo game settings controlled by admin."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "SwarnaPlay — Royal Virtual Gaming Arena",
+  "description": "A luxury gold, crimson, and obsidian virtual-coin gaming platform featuring Wingo 30s/60s, Aviator Crash, Teen Patti, virtual wallet, and a locked admin control system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
